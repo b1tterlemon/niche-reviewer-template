@@ -62,7 +62,7 @@ export const companies: Company[] = [
   //   pros: ["Pro 1", "Pro 2", "Pro 3"],
   //   cons: ["Con 1", "Con 2"],
   //   useCases: ["Use case 1", "Use case 2"],
-  //   featured: false,
+  //   featured: true,  // set true on your #1 company — it will be pinned first in the nav
   // },
 ];
 

@@ -19,8 +19,12 @@ const {
 
 const pageTitle = title === SITE.name ? title : `${title} | ${SITE.name}`;
 
-// Sort companies alphabetically for nav
-const navCompanies = [...companies].sort((a, b) => a.name.localeCompare(b.name));
+// Featured company (your #1) pinned first, then alphabetical
+const featured = companies.find(c => c.featured);
+const navCompanies = [
+  ...(featured ? [featured] : []),
+  ...companies.filter(c => !c.featured).sort((a, b) => a.name.localeCompare(b.name)),
+];
 
 // Top comparisons drawn from actual data (empty when no companies added yet)
 const topComparisons = getComparisons().slice(0, 6).map(({ slug, slug1, slug2 }) => {
