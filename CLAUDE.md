@@ -197,6 +197,15 @@ the `allTech` array to match your niche's capabilities and tools.
     all history is on `main` from the start. Cloudflare Pages and GitHub both
     expect `main`.
 
+12. **No table on the homepage may be all-dashes.** A table where every data cell
+    shows "–" means a mismatch between the column keywords and the actual data.
+    After populating `companies.ts`, run `npm run build` and visually check every
+    matrix/capability table. The engagement models table auto-generates its columns
+    from `engagementModels` values in the data — it is safe. Any other matrix table
+    that checks for keywords must be verified: the keywords must be substrings of the
+    actual data values. Fix by updating the keyword list to match your niche's
+    terminology.
+
 ---
 
 ## Build Commands

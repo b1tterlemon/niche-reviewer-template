@@ -466,6 +466,24 @@ grep "badges:" src/data/companies.ts | head -20
 grep "'" src/lib/companies.ts | head -20
 ```
 
+**Matrix table all-dash check — REQUIRED before pushing:**
+
+After the build, open `dist/index.html` and search for tables with only "–" cells.
+A table where every data cell is "–" means keyword mismatch — the column keywords
+don't match what's in the company data.
+
+```bash
+# Quick check: if any matrix table has 5+ consecutive "–" cells, investigate
+grep -c '">–<' dist/index.html
+```
+
+The engagement models table is safe (auto-generates columns from data). Check all
+other matrix tables — especially the industry matrix. The industry matrix uses
+keywords `['ai', 'financial', 'government', 'research', 'media', 'commerce']`
+against `c.industries[]`. If your niche uses different industry terminology,
+update the column keywords in `src/pages/index.astro` to match substrings of
+the actual `industries` values in `companies.ts`.
+
 **Commit the clean build:**
 
 ```bash

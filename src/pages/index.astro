@@ -9,6 +9,9 @@ const year = new Date().getFullYear();
 
 // Top-rated companies used in featured profiles section
 const featuredProfiles = [...companies].sort((a, b) => b.rating - a.rating).slice(0, 10);
+
+// All unique engagement models across companies — auto-generates table columns so they always match the data
+const allEngagementModels = [...new Set(companies.flatMap(c => c.engagementModels))].sort();
 ---
 
 <Base
@@ -308,33 +311,31 @@ const featuredProfiles = [...companies].sort((a, b) => b.rating - a.rating).slic
       </div>
     </section>
 
-    <!-- TABLE 9: ENGAGEMENT MODELS BY COMPANY -->
+    <!-- TABLE 9: ENGAGEMENT MODELS BY COMPANY — columns auto-generated from data -->
     <section class="mb-14">
       <h2 class="text-2xl font-bold text-slate-900 mb-2">Which engagement models does each {NICHE.providerLabel} offer?</h2>
-      <p class="text-slate-600 mb-6 text-sm">Short answer: fixed-price projects are best for defined scope; dedicated teams suit long-running programmes. Most firms offer more than one model.</p>
+      <p class="text-slate-600 mb-6 text-sm">Short answer: most {NICHE.providersLabel} offer more than one engagement model. Use this table to filter by your preferred structure.</p>
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
               <th class="text-left px-4 py-3 font-semibold text-slate-700">Company</th>
-              <th class="text-center px-4 py-3 font-semibold text-slate-700 whitespace-nowrap">Fixed price</th>
-              <th class="text-center px-4 py-3 font-semibold text-slate-700 whitespace-nowrap">Dedicated team</th>
-              <th class="text-center px-4 py-3 font-semibold text-slate-700 whitespace-nowrap">Retainer</th>
-              <th class="text-center px-4 py-3 font-semibold text-slate-700 whitespace-nowrap">Time & materials</th>
+              {allEngagementModels.map(m => (
+                <th class="text-center px-4 py-3 font-semibold text-slate-700 whitespace-nowrap">{m}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {companies.map((c, i) => {
-              const has = (m: string) => c.engagementModels.some(e => e.toLowerCase().includes(m));
-              return (
-                <tr class={`border-b border-slate-100 hover:bg-slate-50 ${i % 2 === 1 ? 'bg-slate-50/40' : ''}`}>
-                  <td class="px-4 py-3 font-semibold"><a href={`/companies/${c.slug}/`} class="text-brand-600 hover:underline">{c.name}</a></td>
-                  {[['fixed','Fixed price'],['dedicated','Dedicated'],['retainer','Retainer'],['time','T&M']].map(([key]) => (
-                    <td class={`px-4 py-3 text-center font-semibold ${has(key) ? 'text-green-600' : 'text-slate-300'}`}>{has(key) ? '✓' : '–'}</td>
-                  ))}
-                </tr>
-              );
-            })}
+            {companies.map((c, i) => (
+              <tr class={`border-b border-slate-100 hover:bg-slate-50 ${i % 2 === 1 ? 'bg-slate-50/40' : ''}`}>
+                <td class="px-4 py-3 font-semibold"><a href={`/companies/${c.slug}/`} class="text-brand-600 hover:underline">{c.name}</a></td>
+                {allEngagementModels.map(m => (
+                  <td class={`px-4 py-3 text-center font-semibold ${c.engagementModels.includes(m) ? 'text-green-600' : 'text-slate-300'}`}>
+                    {c.engagementModels.includes(m) ? '✓' : '–'}
+                  </td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
