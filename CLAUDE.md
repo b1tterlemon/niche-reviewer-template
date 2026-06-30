@@ -170,13 +170,32 @@ the `allTech` array to match your niche's capabilities and tools.
    capability labels in the JSX capability table.** If you rename one, rename both.
 
 7. **`npm install` may fail with cache permission error.** Fix:
-   `sudo chown -R $(whoami) ~/.npm` or use `npm install --cache /tmp/npm-cache`.
+   `npm install --cache /tmp/npm-cache`. This bypasses the EACCES error on the
+   default npm cache directory without requiring sudo.
 
 8. **Cloudflare Pages uses `public/_headers` and `public/_redirects`**,
    not `vercel.json`. Do not add a `vercel.json` — it will be ignored.
 
 9. **`astro.config.mjs` redirects go in `redirects:`.** Do not define the
    same path in both a `.astro` file and as a redirect.
+
+10. **Cloudflare Pages project MUST be created from the dashboard, not the API.**
+    Creating a project via the Cloudflare API (POST `/accounts/{id}/pages/projects`)
+    produces a "Direct Upload" project. Direct Upload projects cannot have a GitHub
+    repo connected — neither via the API (`PATCH` with `source:` returns error
+    `8000069`) nor via the dashboard. If you hit "A project with this name already
+    exists", the existing project is likely a Direct Upload project. Fix:
+    1. Delete it via API: `DELETE /accounts/{id}/pages/projects/{name}`
+    2. Recreate from the Cloudflare dashboard: **Pages → Create a project →
+       Connect to Git** → select the GitHub repo → set build command `npm run build`,
+       output dir `dist`.
+    Always use "Connect to Git" from the start. Never create Pages projects via the
+    API for git-backed deployments.
+
+11. **`git init` creates `master` branch by default on macOS.** Rename it to `main`
+    immediately: `git branch -m master main`. Do this before the first commit so
+    all history is on `main` from the start. Cloudflare Pages and GitHub both
+    expect `main`.
 
 ---
 

@@ -41,8 +41,8 @@ const pageDesc = `Compare the top ${company.name} alternatives for ${NICHE.label
       <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">Best {company.name} alternatives in {new Date().getFullYear()}</h1>
       <p class="text-slate-600 text-lg mb-2">
         {company.name} is {company.tagline.toLowerCase()}.
-        Teams looking for alternatives typically seek {alternatives[0].primaryDifferentiator.toLowerCase()},
-        different pricing structures, or different technical specialisations.
+        Teams looking for alternatives typically seek different pricing structures, technical specialisations, or coverage approaches.
+        {alternatives.length > 0 && alternatives[0].primaryDifferentiator.toLowerCase() + '.'}
       </p>
       <p class="text-slate-600">
         The {alternatives.length} alternatives below are all top-rated {NICHE.label} {NICHE.providersLabel} with verified delivery records. Updated {SITE.lastReviewed}.

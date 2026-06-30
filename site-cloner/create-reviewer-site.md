@@ -215,6 +215,7 @@ git clone https://github.com/b1tterlemon/niche-reviewer-template.git ~/Projects/
 cd ~/Projects/[new-site-name]
 rm -rf .git
 git init
+git branch -m master main   # macOS git init creates 'master' by default — rename immediately
 
 # 3. Initial commit
 git add .
@@ -429,15 +430,16 @@ Update the three niche-specific sections:
 
 ```bash
 cd ~/Projects/[new-site-name]
-npm install
+npm install --cache /tmp/npm-cache   # use this form to avoid EACCES cache permission errors
 npm run build
 ```
 
 **Expected output:**
 - Zero TypeScript errors
 - Zero Astro build errors
-- Page count = 1 home + N profiles + N alternatives + N×(N-1) comparisons + 1 disclosure + 1 404
-  (e.g. 7 companies → 1 + 7 + 7 + 42 + 1 + 1 = 59 pages)
+- Page count = 1 home + N profiles + N alternatives + N×(N-1)/2 comparisons + 1 disclosure + 1 404 + 1 companies index
+  (e.g. 7 companies → 1 + 7 + 7 + 21 + 1 + 1 + 1 = 39 … Astro reports 38 because robots.txt is a TS route counted separately)
+  Quick check: `[build] N page(s) built` in the output — any TypeScript error before this line must be fixed before pushing.
 
 **If build fails:**
 - Read the full error message and fix the offending file
@@ -503,44 +505,40 @@ git ls-remote origin
 
 ## PHASE 7 — Deploy to Cloudflare Pages
 
-Use the Cloudflare API MCP (`mcp__plugin_cloudflare_cloudflare-api__execute`)
-to create the Pages project via the REST API:
+**CRITICAL: Do NOT create the Pages project via the Cloudflare API MCP.**
+The API creates a "Direct Upload" project that cannot connect to GitHub.
+The `PATCH source:` endpoint to fix this returns error `8000069` and has no
+workaround short of deleting the project and starting over.
 
+**Always create the Pages project from the Cloudflare dashboard:**
+
+Tell the user:
+> "To deploy, go to the Cloudflare dashboard → Pages → Create a project →
+> **Connect to Git** → select the **[github-account]/[repo-name]** repository →
+> set Branch: `main`, Build command: `npm run build`, Build output directory: `dist` →
+> click Save and Deploy. Let me know when the first build completes."
+
+Wait for the user to confirm the build completed before proceeding.
+
+**If the user reports "A project with this name already exists":**
+This means a Direct Upload project with that name already exists (likely from a
+previous API call). Fix:
+
+1. Use the Cloudflare API MCP to delete the stale project:
 ```javascript
 async () => {
   return cloudflare.request({
-    method: 'POST',
-    path: `/accounts/${accountId}/pages/projects`,
-    body: {
-      name: '[cloudflare-project-name]',
-      production_branch: 'main',
-      build_config: {
-        build_command:       'npm run build',
-        destination_dir:     'dist',
-        root_dir:            '',
-        build_caching:       true,
-      },
-      deployment_configs: {
-        production: {
-          environment_variables: {
-            NODE_VERSION: { value: '20' }
-          }
-        }
-      }
-    }
+    method: 'DELETE',
+    path: `/accounts/${accountId}/pages/projects/[cloudflare-project-name]`
   });
 }
 ```
+2. Then instruct the user to create fresh from the dashboard using Connect to Git.
 
-If the MCP returns an error (e.g. auth scope missing), fall back to the
-Cloudflare dashboard: **Pages → Create a project → Connect to Git →**
-select the GitHub repo → set build command `npm run build`, output dir `dist`.
+**After the first dashboard build succeeds:**
 
-**After the project is created:**
-
-1. Connect it to the GitHub repo (Cloudflare Pages → Settings → Builds & deployments → Connect a Git repository)
-2. Trigger the first deployment by pushing a commit or clicking "Deploy" in the dashboard
-3. Note the preview URL: `https://[project-name].pages.dev`
+1. Note the preview URL: `https://[project-name].pages.dev`
+2. Every subsequent `git push origin main` triggers an automatic redeploy — no further dashboard action needed.
 
 **If the user provided a custom domain:**
 - Add it in Cloudflare Pages → Custom domains
@@ -618,6 +616,10 @@ Recommended next steps:
 | GitHub push rejected (auth) | Ask user to check GitHub MCP credentials / PAT scope (needs `repo` scope). |
 | Cloudflare Pages build fails | Check build logs in Cloudflare dashboard. Common causes: wrong output dir (`dist`), missing `NODE_VERSION=20`. |
 | Cloudflare Pages API auth error | Verify API token has `Cloudflare Pages: Edit` permission. Fall back to dashboard UI. |
+| "A project with this name already exists" | The existing project is a Direct Upload project (created by a prior API call). Delete it via API (`DELETE /accounts/{id}/pages/projects/{name}`), then recreate from the Cloudflare dashboard using Connect to Git. |
+| Pages project won't connect to GitHub / error `8000069` | The project is a Direct Upload project. The `PATCH source:` endpoint cannot convert it. Delete and recreate from the dashboard. |
+| `git push` goes to `master` not `main` | You forgot `git branch -m master main` after `git init`. Run it now, then force-push: `git push -u origin main`. |
+| `npm install` EACCES permission error | Use `npm install --cache /tmp/npm-cache` to bypass the cache permission issue. |
 | Fewer than 6 verifiable companies | Tell user; ask whether to proceed with fewer or research adjacent sub-niches. |
 | Domain not yet purchased | Skip DNS steps; note `*.pages.dev` URL; remind user to add custom domain later. |
 | Two companies share a slug | Append suffix to the second (e.g. `-inc`, `-group`); ensure URL-safe. |
