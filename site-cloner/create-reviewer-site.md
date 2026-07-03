@@ -417,7 +417,82 @@ Run this scan to confirm no TODO placeholders remain:
 grep -n "TODO" src/pages/comparisons/\[slug\].astro | head -10
 ```
 
-### 4h. `CLAUDE.md`
+### 4h. `src/pages/llms.txt.ts`
+
+Create this file to make the site machine-readable by AI crawlers (follows the
+[llmstxt.org](https://llmstxt.org/) spec). It is a dynamic Astro endpoint that
+generates `/llms.txt` at build time from the companies data, so it never goes stale.
+
+**Best practices baked in:**
+- H1 → site name; blockquote → site description from `SITE.description`
+- Curated sections (not a sitemap dump) — all companies listed with taglines
+- Comparisons limited to the featured company vs all others (focused, not overwhelming)
+- Every link has a one-liner description — bare URLs are ignored by LLMs
+- Alternatives in `## Optional` so LLMs can skip if context is tight
+- Under 50 KB even with 30+ companies; stays within model context limits
+
+```typescript
+import { SITE, NICHE } from '../config';
+import { companies, getComparisons } from '../data/companies';
+
+export async function GET() {
+  const featured = companies.find((c) => c.featured) ?? companies[0];
+  const comparisons = getComparisons();
+  // Only include comparisons involving the top-ranked (featured) company
+  const keyComparisons = comparisons.filter(
+    (c) => c.slug1 === featured.slug || c.slug2 === featured.slug
+  );
+
+  const lines: string[] = [];
+
+  lines.push(`# ${SITE.name}`);
+  lines.push('');
+  lines.push(`> ${SITE.description}`);
+  lines.push('');
+
+  lines.push('## Start Here');
+  lines.push('');
+  lines.push(`- [Homepage](${SITE.url}/): Full directory of ${companies.length} ${NICHE.providersLabel} with ratings, pros/cons, and verified pricing`);
+  lines.push(`- [Affiliate Disclosure](${SITE.url}/affiliate-disclosure/): Editorial independence policy and disclosure`);
+  lines.push('');
+
+  lines.push(`## ${NICHE.label} Reviews`);
+  lines.push('');
+  for (const c of companies) {
+    lines.push(`- [${c.name}](${SITE.url}/companies/${c.slug}/): ${c.tagline}`);
+  }
+  lines.push('');
+
+  lines.push('## Comparisons');
+  lines.push('');
+  for (const cmp of keyComparisons) {
+    const a = companies.find((c) => c.slug === cmp.slug1);
+    const b = companies.find((c) => c.slug === cmp.slug2);
+    if (a && b) {
+      lines.push(`- [${a.name} vs ${b.name}](${SITE.url}/comparisons/${cmp.slug}/): Head-to-head comparison of ${a.name} and ${b.name}`);
+    }
+  }
+  lines.push('');
+
+  lines.push('## Optional');
+  lines.push('');
+  for (const c of companies) {
+    lines.push(`- [${c.name} Alternatives](${SITE.url}/alternatives/${c.slug}/): Best alternatives to ${c.name} for ${NICHE.label.toLowerCase()} use cases`);
+  }
+
+  return new Response(lines.join('\n'), {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+}
+```
+
+After creating the file, run `npm run build` and confirm the endpoint appears:
+```
+λ src/pages/llms.txt.ts
+   └─ /llms.txt (+Xms)
+```
+
+### 4i. `CLAUDE.md`
 
 Update the three niche-specific sections:
 1. **Rating logic** dimension winner bullets — name your niche's actual companies
@@ -580,6 +655,8 @@ After deployment completes, verify using the `.pages.dev` URL:
 ### Technical checks
 - [ ] `https://[domain]/sitemap-index.xml` returns valid XML
 - [ ] `https://[domain]/robots.txt` returns `Allow: *` and sitemap pointer
+- [ ] `https://[domain]/llms.txt` returns plain text starting with `# [Site Name]`
+- [ ] llms.txt contains all company names with taglines (spot-check 3)
 - [ ] No broken internal links on homepage (check browser console)
 
 ### Content checks
@@ -612,6 +689,8 @@ Branch: main | Auto-deploys: enabled
 Pages generated: [N] total
   [N] company profiles | [N] alternatives | [N×(N-1)] comparisons
   + home, disclosure, 404
+
+llms.txt: https://[domain]/llms.txt (auto-generated from companies data)
 
 Recommended next steps:
   1. Submit sitemap to Google Search Console:
@@ -650,9 +729,11 @@ Recommended next steps:
 
 **Build & content integrity**
 - [ ] `npm run build` exits 0 with zero TypeScript or Astro errors
+- [ ] Build output shows `λ src/pages/llms.txt.ts → /llms.txt`
 - [ ] `grep -n "TODO" src/config.ts` returns zero results
 - [ ] `grep -n "TODO" src/pages/index.astro` returns zero results
 - [ ] `ls vercel.json` returns "No such file"
+- [ ] `src/pages/llms.txt.ts` exists and imports from `../config` and `../data/companies`
 - [ ] All `SERVICE_LABELS` keys in `src/lib/companies.ts` have a matching entry in at least one company's `badges` array
 - [ ] `hasCap()` function keys in `comparisons/[slug].astro` are niche-specific (no TODO placeholders)
 - [ ] `allTech` array in `comparisons/[slug].astro` is niche-specific (no TODO placeholders)
