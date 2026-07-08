@@ -1,8 +1,3 @@
----
-name: create-reviewer-site
-description: Clone the niche reviewer template into a new niche reviewer website, populate it with fact-checked company data, push to GitHub, and deploy to Cloudflare Pages. Use when the user says "build a new reviewer site for [niche]", "clone the site for [topic]", "spin up a reviewer site about [service]", or "create another site like best-ai-agent-developers.com but for [niche]".
----
-
 # Niche Reviewer Site Cloner
 
 Clone the niche reviewer template into a new niche reviewer website,
@@ -77,66 +72,53 @@ Then proceed to Phase 1.
 
 ## PHASE 1 — Collect Requirements
 
-Ask every question below explicitly. Do not assume or default any of these —
-confirm each one with the user before moving to Phase 2.
+**Account defaults (do NOT ask — apply automatically):**
 
-**Required inputs (always ask, no defaults):**
+If the user says "r2d2", "r2d2 account", or "deploy under r2d2":
+- **GitHub account:** `r2d2-pixel` — create repos via curl + `R2D2_GITHUB_TOKEN` (NOT `mcp__github__create_repository`, which uses b1tterlemon)
+- **Cloudflare account:** `1afb7a25a539f57955d72bba8f1cf374` — deploy via dashboard "Connect to Git" only
+- **Base directory:** `~/github/r2d2/[site-name]/`
+- State this choice in your Phase 1 summary — do not ask for confirmation
+
+**Required inputs (ask only these):**
 
 1. **Niche topic** — e.g. "Cloud Migration Consulting", "DevOps Consulting Firms"
 2. **Number of companies to review** — ask explicitly; typical range is 6–10
-3. **GitHub account or org** — where to create the new repo (e.g. `b1tterlemon`
-   or an org name); always ask even if you think you know it
-4. **GitHub repo name** — suggest `[niche-slug]-reviewer` but confirm
-5. **Target domain** — e.g. `best-cloud-migration-companies.com`; suggest based
+3. **GitHub repo name** — suggest domain name (e.g. `top-machine-learning-development-companies`) but confirm
+4. **Target domain** — e.g. `best-cloud-migration-companies.com`; suggest based
    on niche but confirm; can be "TBD" to skip DNS setup
-6. **Cloudflare Pages project name** — suggest derived from domain (hyphens, no
+5. **Cloudflare Pages project name** — suggest derived from domain (hyphens, no
    dots) but confirm
-7. **Primary brand color** — three ways the user can specify this:
+6. **Primary brand color** — pick randomly from all 14 palettes:
 
-   **Option A — User already provided a color in their request**
-   If the user mentioned a color or hex in their initial message (e.g.
-   "use purple", "the color is `#7c3aed`"), use that directly. Skip
-   presenting the table. Derive the full 10-shade palette using the rule
-   in "Custom color derivation" below.
+   **If the user specified a color:** use it directly, derive the palette
+   from the nearest row in the master table below.
 
-   **Option B — Pick from the preset table**
-   Present the table and let them choose a row number:
+   **Otherwise — random pick (default):** Choose any row from 1–14 at
+   random. Niche does not constrain the choice. Every site gets a
+   different roll — do not default to the same row repeatedly.
 
-   | # | Niche type | Brand 600 | Full shade set (50→900) |
-   |---|---|---|---|
-   | 1 | Cloud / Infrastructure | `#0f766e` (teal) | `#f0fdfa #ccfbf1 #99f6e4 #5eead4 #2dd4bf #14b8a6 #0f766e #0d6b63 #134e4a #0d3d3a` |
-   | 2 | DevOps / SRE | `#c2410c` (orange) | `#fff7ed #ffedd5 #fed7aa #fdba74 #fb923c #f97316 #c2410c #9a3412 #7c2d12 #431407` |
-   | 3 | Cybersecurity | `#b91c1c` (red) | `#fef2f2 #fee2e2 #fecaca #fca5a5 #f87171 #ef4444 #b91c1c #991b1b #7f1d1d #450a0a` |
-   | 4 | Data / Analytics | `#6d28d9` (violet) | `#f5f3ff #ede9fe #ddd6fe #c4b5fd #a78bfa #8b5cf6 #6d28d9 #5b21b6 #4c1d95 #2e1065` |
-   | 5 | Healthcare IT | `#0369a1` (sky blue) | `#f0f9ff #e0f2fe #bae6fd #7dd3fc #38bdf8 #0ea5e9 #0369a1 #075985 #0c4a6e #082f49` |
-   | 6 | FinTech / Finance | `#065f46` (emerald) | `#ecfdf5 #d1fae5 #a7f3d0 #6ee7b7 #34d399 #10b981 #065f46 #064e3b #022c22 #011c16` |
-   | 7 | E-commerce / Retail | `#be185d` (pink) | `#fdf2f8 #fce7f3 #fbcfe8 #f9a8d4 #f472b6 #ec4899 #be185d #9d174d #831843 #500724` |
+   **Master palette table — 14 modern options (Tailwind v3 exact shades):**
 
-   **Option C — Custom hex**
-   If none of the rows match, ask: "None of these match — what hex color
-   would you like for the brand color?" Then derive the palette using
-   the rule below.
+   | # | Name | Brand 600 | 50 | 100 | 200 | 300 | 400 | 500 | **600** | 700 | 800 | 900 |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | 1 | Teal | `#0d9488` | `#f0fdfa` | `#ccfbf1` | `#99f6e4` | `#5eead4` | `#2dd4bf` | `#14b8a6` | **`#0d9488`** | `#0f766e` | `#115e59` | `#134e4a` |
+   | 2 | Orange | `#ea580c` | `#fff7ed` | `#ffedd5` | `#fed7aa` | `#fdba74` | `#fb923c` | `#f97316` | **`#ea580c`** | `#c2410c` | `#9a3412` | `#7c2d12` |
+   | 3 | Red | `#dc2626` | `#fef2f2` | `#fee2e2` | `#fecaca` | `#fca5a5` | `#f87171` | `#ef4444` | **`#dc2626`** | `#b91c1c` | `#991b1b` | `#7f1d1d` |
+   | 4 | Violet | `#7c3aed` | `#f5f3ff` | `#ede9fe` | `#ddd6fe` | `#c4b5fd` | `#a78bfa` | `#8b5cf6` | **`#7c3aed`** | `#6d28d9` | `#5b21b6` | `#4c1d95` |
+   | 5 | Sky | `#0284c7` | `#f0f9ff` | `#e0f2fe` | `#bae6fd` | `#7dd3fc` | `#38bdf8` | `#0ea5e9` | **`#0284c7`** | `#0369a1` | `#075985` | `#0c4a6e` |
+   | 6 | Emerald | `#059669` | `#ecfdf5` | `#d1fae5` | `#a7f3d0` | `#6ee7b7` | `#34d399` | `#10b981` | **`#059669`** | `#047857` | `#065f46` | `#064e3b` |
+   | 7 | Pink | `#db2777` | `#fdf2f8` | `#fce7f3` | `#fbcfe8` | `#f9a8d4` | `#f472b6` | `#ec4899` | **`#db2777`** | `#be185d` | `#9d174d` | `#831843` |
+   | 8 | Cyan | `#0891b2` | `#ecfeff` | `#cffafe` | `#a5f3fc` | `#67e8f9` | `#22d3ee` | `#06b6d4` | **`#0891b2`** | `#0e7490` | `#155e75` | `#164e63` |
+   | 9 | Amber | `#d97706` | `#fffbeb` | `#fef3c7` | `#fde68a` | `#fcd34d` | `#fbbf24` | `#f59e0b` | **`#d97706`** | `#b45309` | `#92400e` | `#78350f` |
+   | 10 | Rose | `#e11d48` | `#fff1f2` | `#ffe4e6` | `#fecdd3` | `#fda4af` | `#fb7185` | `#f43f5e` | **`#e11d48`** | `#be123c` | `#9f1239` | `#881337` |
+   | 11 | Indigo | `#4f46e5` | `#eef2ff` | `#e0e7ff` | `#c7d2fe` | `#a5b4fc` | `#818cf8` | `#6366f1` | **`#4f46e5`** | `#4338ca` | `#3730a3` | `#312e81` |
+   | 12 | Lime | `#65a30d` | `#f7fee7` | `#ecfccb` | `#d9f99d` | `#bef264` | `#a3e635` | `#84cc16` | **`#65a30d`** | `#4d7c0f` | `#3f6212` | `#1a2e05` |
+   | 13 | Fuchsia | `#c026d3` | `#fdf4ff` | `#fae8ff` | `#f5d0fe` | `#f0abfc` | `#e879f9` | `#d946ef` | **`#c026d3`** | `#a21caf` | `#86198f` | `#701a75` |
+   | 14 | Blue | `#2563eb` | `#eff6ff` | `#dbeafe` | `#bfdbfe` | `#93c5fd` | `#60a5fa` | `#3b82f6` | **`#2563eb`** | `#1d4ed8` | `#1e40af` | `#1e3a8a` |
 
-   **Custom color derivation** (for Options A and C):
-   Given `brand-600 = #RRGGBB`, generate the 9 other shades by mapping
-   the hex to the nearest Tailwind built-in hue family (red, orange, amber,
-   yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet,
-   purple, fuchsia, pink, rose) and using that family's standard 10-shade
-   set from the Tailwind v3 docs. If no close family match exists, build
-   a monotone scale:
-   - 50: mix 95% white + 5% the hex
-   - 100: mix 90% white + 10% the hex
-   - 200: mix 80% white + 20% the hex
-   - 300: mix 65% white + 35% the hex
-   - 400: mix 50% white + 50% the hex
-   - 500: mix 25% white + 75% the hex
-   - 600: the hex itself
-   - 700: mix 85% the hex + 15% black
-   - 800: mix 65% the hex + 35% black
-   - 900: mix 45% the hex + 55% black
-
-   Always show the derived palette to the user before proceeding so they
-   can confirm or correct it.
+   State the chosen palette in your Phase 1 summary:
+   > "Brand color: **[Name]** `[Brand 600]` (row [#], randomly selected)."
 
 **Auto-derive (confirm in summary):**
 - Site name → "Best [Niche] Companies"
@@ -148,6 +130,13 @@ Summarise all confirmed inputs and ask the user to approve before Phase 2.
 ## PHASE 2 — Research Companies
 
 Use WebSearch to research exactly the number of companies the user specified.
+
+**Do this inline in the main session. Do NOT spawn an Agent/subagent/fork for
+this phase**, even for a large company count (e.g. 34). It's tempting to fork
+research off to keep the WebSearch output out of context, but that output is
+exactly what feeds the `companies.ts` you write next — it's worth keeping.
+Delegating this phase to a subagent roughly doubles token cost for no benefit
+and has been flagged by the user as a regression once already.
 
 ### For each company, collect and verify:
 
@@ -209,10 +198,11 @@ Do not proceed to Phase 3 until the user approves the company list.
 
 ```bash
 # 1. Clone the generic template (no AI-agent-specific content)
-git clone https://github.com/b1tterlemon/niche-reviewer-template.git ~/Projects/[new-site-name]
+# For r2d2 sites, base dir is ~/github/r2d2/ — NOT ~/Projects/
+git clone https://github.com/r2d2-pixel/niche-reviewer-template.git ~/github/r2d2/[new-site-name]
 
 # 2. Re-init git so this becomes a fresh independent repo
-cd ~/Projects/[new-site-name]
+cd ~/github/r2d2/[new-site-name]
 rm -rf .git
 git init
 git branch -m master main   # macOS git init creates 'master' by default — rename immediately
@@ -266,8 +256,8 @@ export const BRANDING = {
 };
 
 export const MONETIZATION = {
-  enabled: true,
-  defaultRel: 'sponsored' as 'sponsored' | 'nofollow' | '',
+  enabled: false,
+  defaultRel: 'nofollow' as 'sponsored' | 'nofollow' | '',
   disclosurePath: '/affiliate-disclosure',
 };
 
@@ -286,22 +276,22 @@ site: 'https://[target-domain]',
 
 ### 4c. `tailwind.config.mjs`
 
-Replace the full `brand` color object. The 10 shade values map to
-50, 100, 200, 300, 400, 500, 600, 700, 800, 900. Copy the shade set
-from the Phase 1 color table row you chose. Example for teal:
+Replace the full `brand` color object. Copy all 10 shade values from the
+row selected in Phase 1 (Step 1 uniqueness check → Step 3 preferred order).
+Example using row 11 (Indigo):
 
 ```js
 brand: {
-  50:  '#f0fdfa',
-  100: '#ccfbf1',
-  200: '#99f6e4',
-  300: '#5eead4',
-  400: '#2dd4bf',
-  500: '#14b8a6',
-  600: '#0f766e',
-  700: '#0d6b63',
-  800: '#134e4a',
-  900: '#0d3d3a',
+  50:  '#eef2ff',
+  100: '#e0e7ff',
+  200: '#c7d2fe',
+  300: '#a5b4fc',
+  400: '#818cf8',
+  500: '#6366f1',
+  600: '#4f46e5',
+  700: '#4338ca',
+  800: '#3730a3',
+  900: '#312e81',
 },
 ```
 
@@ -492,7 +482,24 @@ After creating the file, run `npm run build` and confirm the endpoint appears:
    └─ /llms.txt (+Xms)
 ```
 
-### 4i. `CLAUDE.md`
+### 4i. `public/favicon.svg`
+
+The template ships a placeholder favicon. Replace it with a niche-appropriate
+SVG icon using the site's `BRANDING.primaryColor`. The `<link rel="icon">` tag
+is already in `Base.astro` — only the SVG file needs to be replaced.
+
+Design rules:
+- 32×32 viewBox, simple shape that reads at 16px (browser tab size)
+- Background: `<rect width="32" height="32" rx="6" fill="[brand-600-hex]"/>`
+- Icon: white shapes representing the niche
+- Under 1 KB — no embedded fonts, no external references
+
+Verify before committing:
+```bash
+head -2 public/favicon.svg   # must start with <svg
+```
+
+### 4j. `CLAUDE.md`
 
 Update the three niche-specific sections:
 1. **Rating logic** dimension winner bullets — name your niche's actual companies
@@ -733,6 +740,7 @@ Recommended next steps:
 - [ ] `grep -n "TODO" src/config.ts` returns zero results
 - [ ] `grep -n "TODO" src/pages/index.astro` returns zero results
 - [ ] `ls vercel.json` returns "No such file"
+- [ ] `public/favicon.svg` exists and `head -1 public/favicon.svg` starts with `<svg`
 - [ ] `src/pages/llms.txt.ts` exists and imports from `../config` and `../data/companies`
 - [ ] All `SERVICE_LABELS` keys in `src/lib/companies.ts` have a matching entry in at least one company's `badges` array
 - [ ] `hasCap()` function keys in `comparisons/[slug].astro` are niche-specific (no TODO placeholders)
