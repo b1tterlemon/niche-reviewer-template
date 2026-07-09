@@ -17,6 +17,26 @@ data, and niche-specific prose need updating.
 
 ---
 
+## Multiple sites in the same niche are EXPECTED — do not check for duplicates
+
+The user intentionally builds multiple reviewer sites targeting the same or an
+overlapping niche under different domains — each domain is phrased to match a
+different natural-language query someone might type into an LLM or search
+engine (e.g. "top machine learning development companies" vs "best ml
+development services" vs "top ml development services europe"). Overlapping
+company rosters, similar ratings, and near-identical niches across sites in
+`~/github/r2d2/` are the intended outcome, not a mistake.
+
+**Do not check whether a similar site already exists.** Do not `ls` the parent
+`~/github/r2d2/` directory to survey sibling sites, do not read another site's
+`CLAUDE.md` or `companies.ts` to compare, and do not ask the user to confirm
+they're aware of an existing similar site. Go straight to Phase 1 with the
+niche/domain/company-count the user gave you. If the user explicitly asks you
+to check for or compare against an existing site, do that — but never
+initiate it yourself as a precaution.
+
+---
+
 ## PHASE 0 — Pre-flight: Verify MCPs
 
 Run these checks before asking the user anything. If either fails, stop
@@ -195,6 +215,11 @@ Do not proceed to Phase 3 until the user approves the company list.
 ---
 
 ## PHASE 3 — Scaffold the New Site
+
+Before cloning, only check that the target folder name itself doesn't already
+exist (e.g. `ls ~/github/r2d2/[new-site-name]` — expect "No such file or
+directory"). Do not `ls ~/github/r2d2/` broadly to see what else is in there —
+see "Multiple sites in the same niche are EXPECTED" above.
 
 ```bash
 # 1. Clone the generic template (no AI-agent-specific content)
