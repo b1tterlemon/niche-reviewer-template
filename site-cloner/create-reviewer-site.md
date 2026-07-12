@@ -35,6 +35,17 @@ niche/domain/company-count the user gave you. If the user explicitly asks you
 to check for or compare against an existing site, do that — but never
 initiate it yourself as a precaution.
 
+**Exception: favicon/brand color IS checked, every time.** The rule above is
+about niche and company-roster duplication — it does not extend to visual
+identity. Every site must have a favicon that's visually distinct from every
+sibling's at 16px (browser-tab size), and two sites sharing the same brand
+color read as the same favicon regardless of internal shape details. Phase 1
+Step 6 requires reading `~/github/r2d2/PALETTE_REGISTRY.md` before picking a
+color — this is the one deliberate exception to "never check siblings."
+Confirmed 2026-07-12: two color collisions (Sky used twice, Emerald used
+twice) shipped across live sites before this registry existed, because color
+was picked by random roll with no collision check.
+
 ---
 
 ## PHASE 0 — Pre-flight: Verify MCPs
@@ -109,14 +120,26 @@ If the user says "r2d2", "r2d2 account", or "deploy under r2d2":
    on niche but confirm; can be "TBD" to skip DNS setup
 5. **Cloudflare Pages project name** — suggest derived from domain (hyphens, no
    dots) but confirm
-6. **Primary brand color** — pick randomly from all 14 palettes:
+6. **Primary brand color** — pick from all 14 palettes, checking the registry first:
+
+   **Read `~/github/r2d2/PALETTE_REGISTRY.md` before choosing.** This is the
+   one file you are always allowed (and required) to read across sites — it
+   exists specifically so favicon colors never collide. It lists which rows
+   are already claimed by which live site.
 
    **If the user specified a color:** use it directly, derive the palette
-   from the nearest row in the master table below.
+   from the nearest row in the master table below. If that row is already
+   claimed by a sibling site, tell the user it collides and ask whether to
+   proceed anyway or pick the nearest unclaimed row — do not silently swap it.
 
-   **Otherwise — random pick (default):** Choose any row from 1–14 at
-   random. Niche does not constrain the choice. Every site gets a
-   different roll — do not default to the same row repeatedly.
+   **Otherwise — random pick (default):** Choose randomly **only from rows
+   marked `_available_` in the registry.** Niche does not constrain the
+   choice. If every row is claimed (more than 14 sites), pick the row with
+   the fewest sites using it and tell the user there's a collision.
+
+   **After deciding, update the registry in the same session (Phase 4c):**
+   change that row's "Used by" cell from `_available_` to the new domain, or
+   add the domain alongside an existing one if you had to double up.
 
    **Master palette table — 14 modern options (Tailwind v3 exact shades):**
 
@@ -205,6 +228,17 @@ Ratings are for **niche-specific delivery suitability**, not overall IT quality.
 - Spread across the full list must be ≥ 0.8 points (e.g. 4.8 down to 3.9)
 - Give at least one company a clear win on cost/accessibility
 - Give at least one large company a win on scale/compliance
+- **Watch for name-recognition bias toward heavily-marketed companies.**
+  Some companies (e.g. LeewayHertz) publish enough SEO/content-marketing
+  material that they get pulled toward a top-2 rank by default, independent
+  of the niche or the rest of the roster. Confirmed 2026-07-12: LeewayHertz
+  landed at rank #2 on two unrelated sites while sitting at rank ~11-14 on
+  four others with the same research process — the #2 placements had no
+  extra verified differentiation to justify the gap. Before ranking any
+  company in the top 3, check that its rating is earned by *this niche's*
+  rating dimensions (specialist depth, scale, cost) versus the rest of *this
+  site's* roster — not by how much marketing copy it has relative to
+  competitors.
 
 After research, present a summary table of all candidates and ask the user:
 > "Here are the [N] companies I found. Confirm to proceed, or let me know if
@@ -302,7 +336,12 @@ site: 'https://[target-domain]',
 ### 4c. `tailwind.config.mjs`
 
 Replace the full `brand` color object. Copy all 10 shade values from the
-row selected in Phase 1 (Step 1 uniqueness check → Step 3 preferred order).
+row selected in Phase 1 (Step 6 — registry-checked color).
+
+**Update `~/github/r2d2/PALETTE_REGISTRY.md` now**, in the same session:
+mark the chosen row's "Used by" cell with this site's domain. Do this before
+moving to 4d — it's easy to forget once you're deep in company data entry.
+
 Example using row 11 (Indigo):
 
 ```js
@@ -513,6 +552,13 @@ The template ships a placeholder favicon. Replace it with a niche-appropriate
 SVG icon using the site's `BRANDING.primaryColor`. The `<link rel="icon">` tag
 is already in `Base.astro` — only the SVG file needs to be replaced.
 
+**The fill color must be the registry-checked color from Phase 1/4c — never
+reuse a sibling's color.** At 16px (browser tab size) the background fill
+dominates what the eye sees; two favicons with the same fill and different
+internal line art still read as identical. If `PALETTE_REGISTRY.md` shows
+your row already claimed, go back and pick a different one before generating
+this file.
+
 Design rules:
 - 32×32 viewBox, simple shape that reads at 16px (browser tab size)
 - Background: `<rect width="32" height="32" rx="6" fill="[brand-600-hex]"/>`
@@ -572,6 +618,30 @@ ls vercel.json 2>/dev/null && echo "DELETE vercel.json before pushing"
 grep "badges:" src/data/companies.ts | head -20
 grep "'" src/lib/companies.ts | head -20
 ```
+
+**Companies dropdown completeness check — REQUIRED before pushing:**
+
+If more than one company has `featured: true` (true for any site with 3-4
+featured picks per the data spec), a broken `navCompanies` filter can
+silently drop companies 2-4 from the "Companies" nav dropdown specifically,
+while those same companies still render correctly everywhere else on the
+homepage (comparisons list, ranked table, footer) — so a generic "does this
+company appear anywhere on the page" grep will NOT catch it. This shipped
+across every site built from an earlier template version. Check the dropdown
+section itself, isolated by its HTML comment markers:
+
+```bash
+# Extract just the "Companies dropdown" block and count company links in it
+awk '/<!-- Companies dropdown -->/,/<!-- Comparisons dropdown -->/' dist/index.html \
+  | grep -oE '/companies/[a-z0-9-]+/"' | sort -u | wc -l
+# Total companies defined in data
+grep -c "slug: '" src/data/companies.ts
+```
+The two counts must match exactly. If the dropdown count is lower, a company
+is missing from the "Companies" dropdown — check `navCompanies` in
+`src/layouts/Base.astro`: it must pin **all** `featured: true` companies at
+the top (not just the first one found) and must not filter any of them out
+of the remaining list.
 
 **Matrix table all-dash check — REQUIRED before pushing:**
 
@@ -770,6 +840,14 @@ Recommended next steps:
 - [ ] All `SERVICE_LABELS` keys in `src/lib/companies.ts` have a matching entry in at least one company's `badges` array
 - [ ] `hasCap()` function keys in `comparisons/[slug].astro` are niche-specific (no TODO placeholders)
 - [ ] `allTech` array in `comparisons/[slug].astro` is niche-specific (no TODO placeholders)
+- [ ] Companies dropdown link count (isolated between the `<!-- Companies dropdown -->` /
+      `<!-- Comparisons dropdown -->` comments in `dist/index.html`) equals total company count —
+      catches the "featured company drops siblings 2-4" nav bug
+
+**Visual identity**
+- [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
+      with this site's domain after picking it
+- [ ] Chosen palette row is not already claimed by a sibling site in the registry
 
 **Data quality**
 - [ ] All company ratings have ≥ 0.8 spread across the list
@@ -777,6 +855,9 @@ Recommended next steps:
 - [ ] All unverifiable facts tagged `(per company website; independently unverifiable)`
 - [ ] `CLAUDE.md` "Known verified facts" contains only the new niche's companies
 - [ ] `CLAUDE.md` "Rating logic" dimension winners reference the new companies
+- [ ] Any top-3-ranked company earned it on this site's own rating dimensions —
+      not carried over by reputation/marketing volume from other sessions
+      (see the name-recognition bias note in Phase 2 Rating logic)
 
 **Deployment**
 - [ ] `sitemap-index.xml` accessible on the live `.pages.dev` URL
