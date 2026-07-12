@@ -178,15 +178,24 @@ If the user says "r2d2", "r2d2 account", or "deploy under r2d2":
       instead of rolling.
    b. If Option 2 or 3, roll randomly among that option's rows marked
       `_available_` in the registry's row table. Option 1 has only row 0.
-   c. **Flag Option 3 (dark) to the user before building** — it's a
+   c. **If Option 3, also roll the two dark-mode sub-axes** in the
+      registry's "Dark mode sub-axes" section — Depth (Deep or Soft, equal
+      probability) and Base hue (Neutral or Tinted, equal probability) —
+      unless the user specified a preference (e.g. "not too dark" → Soft;
+      "dark green/blue/etc." → Tinted). These are independent of the row
+      pick and of each other.
+   d. **Flag Option 3 (dark) to the user before building** — it's a
       whole-site pass touching every page's colors, not a handful of
       classes, per the registry's "Dark mode implementation notes." Still
       apply it the same session if approved; it's mechanical (follow the
       notes), not a fresh design exploration — just larger in scope than
-      Options 1/2.
+      Options 1/2. If Base hue rolled Tinted, also follow the registry's
+      "Tinted base" notes — it is not a drop-in reuse of the Neutral recipe
+      (text/borders must stay neutral, badge tints need a neutral-glass
+      treatment, and status colors may need a manual contrast bump).
 
    State the chosen theme in your Phase 1 summary:
-   > "Visual theme: **[Name]** (row [#], Option [1/2/3])."
+   > "Visual theme: **[Name]** (row [#], Option [1/2/3][, Depth: Deep/Soft, Base hue: Neutral/Tinted if Option 3])."
 
 **Auto-derive (confirm in summary):**
 - Site name → "Best [Niche] Companies"
@@ -412,12 +421,20 @@ pass, not a fresh design pass. What that means depends on the Major Option:
   "Hero band treatment" — do not skip the hero step, a token-only pass was
   judged too subtle when compared side-by-side against a sibling
   (confirmed 2026-07-12).
-- **Option 3** (rows 3/6/7, dark): follow "Dark mode implementation notes"
-  in full — this is a whole-site pass (every `.astro` file, not just the
+- **Option 3** (rows 3/6/7/8/9, dark): follow "Dark mode implementation
+  notes" in full, plus the "Dark mode sub-axes" (Depth, Base hue) rolled in
+  Phase 1c — this is a whole-site pass (every `.astro` file, not just the
   homepage): inverted neutral-scale substitution, brand-color rebalancing
   for dark-background contrast, hardcoded hex colors (e.g. `StarRating`),
-  Tailwind Typography `prose-invert`, and status colors. Grep for the
-  opacity-collision bug the notes describe before committing.
+  Tailwind Typography `prose-invert`, and status colors. If Base hue is
+  Tinted, also follow "Tinted base" notes — text/borders stay neutral even
+  though backgrounds use the site's own `brand` family, badge tints need a
+  neutral-glass treatment, and status colors (e.g. green checkmarks on a
+  green-tinted base) may need a manual contrast bump found only by visual
+  QA, not assumed from the Neutral recipe. Grep for the opacity-collision
+  bug the notes describe before committing (two distinct flavors documented
+  — a pre-existing source token, and your own replacement text getting
+  re-matched by a later rule in the same pass).
 
 Do this across every `.astro` file under `src/`, then `npm run build` to
 confirm it's clean before moving on.
