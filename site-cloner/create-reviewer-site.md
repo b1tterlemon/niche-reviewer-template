@@ -163,6 +163,29 @@ If the user says "r2d2", "r2d2 account", or "deploy under r2d2":
    State the chosen palette in your Phase 1 summary:
    > "Brand color: **[Name]** `[Brand 600]` (row [#], randomly selected)."
 
+7. **Visual theme preset** — pick from `~/github/r2d2/THEME_REGISTRY.md`.
+
+   Color alone is not enough to make sites feel distinct — every r2d2 site
+   built before 2026-07-12 shared the same Inter font, same `slate` neutral
+   scale, same `bg-white`, same radius and shadow values, so they read as
+   one templated group regardless of accent hue. The theme registry tracks
+   the rest of the visual identity (neutral scale, display font pairing,
+   corner radius, shadow style) as a small set of fixed presets — picking
+   one is a mechanical class-token swap (see the registry's "How to apply"
+   section), not a fresh design pass, so it stays cheap per site.
+
+   **Read `~/github/r2d2/THEME_REGISTRY.md` before choosing.** Pick randomly
+   from rows marked `_available_`, unless the user specifies a direction
+   (e.g. "dark", "minimal", "warm"). **Avoid row 0 (Classic Light)** — it's
+   the legacy default already used by 9 sites; only fall back to it if every
+   other row is claimed. Rows marked "dark — higher effort" (3 and 6) touch
+   text/border contrast on every page, not just a handful of classes — flag
+   this to the user before picking one so they know it's a bigger diff than
+   the light rows.
+
+   State the chosen theme in your Phase 1 summary:
+   > "Visual theme: **[Name]** (row [#])."
+
 **Auto-derive (confirm in summary):**
 - Site name → "Best [Niche] Companies"
 
@@ -374,6 +397,19 @@ brand: {
   900: '#312e81',
 },
 ```
+
+### 4c-2. Apply the visual theme preset
+
+Apply the row picked in Phase 1 Step 7. Follow the "How to apply a row"
+section in `~/github/r2d2/THEME_REGISTRY.md` exactly — it's a mechanical
+find/replace pass (neutral scale rename, radius permutation, `font-display`
+on `<h1>`s and the header logo only, shadow swap), not a fresh design pass.
+Do this across every `.astro` file under `src/`, then `npm run build` to
+confirm it's clean before moving on.
+
+**Update `~/github/r2d2/THEME_REGISTRY.md` now**, in the same session: mark
+the chosen row's "Used by" cell with this site's domain. Do this before
+moving to 4d — same reasoning as the palette registry update above.
 
 ### 4d. `src/data/companies.ts`
 
@@ -1047,6 +1083,10 @@ Recommended next steps:
 - [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
       with this site's domain after picking it
 - [ ] Chosen palette row is not already claimed by a sibling site in the registry
+- [ ] `~/github/r2d2/THEME_REGISTRY.md` was read before picking the visual theme, and updated
+      with this site's domain after applying it
+- [ ] Chosen theme row is not row 0 (Classic Light) unless every other row was claimed
+- [ ] `npm run build` succeeded after applying the theme preset
 
 **Data quality**
 - [ ] All company ratings have ≥ 0.8 spread across the list
