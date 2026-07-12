@@ -165,26 +165,28 @@ If the user says "r2d2", "r2d2 account", or "deploy under r2d2":
 
 7. **Visual theme preset** — pick from `~/github/r2d2/THEME_REGISTRY.md`.
 
-   Color alone is not enough to make sites feel distinct — every r2d2 site
-   built before 2026-07-12 shared the same Inter font, same `slate` neutral
-   scale, same `bg-white`, same radius and shadow values, so they read as
-   one templated group regardless of accent hue. The theme registry tracks
-   the rest of the visual identity (neutral scale, display font pairing,
-   corner radius, shadow style) as a small set of fixed presets — picking
-   one is a mechanical class-token swap (see the registry's "How to apply"
-   section), not a fresh design pass, so it stays cheap per site.
+   Color alone is not enough to make sites feel distinct, and even a
+   neutral/font/radius token pass alone was judged too subtle when compared
+   side-by-side against a sibling (confirmed 2026-07-12). The registry now
+   organizes themes around **3 Major Options** with a two-step random draw:
 
-   **Read `~/github/r2d2/THEME_REGISTRY.md` before choosing.** Pick randomly
-   from rows marked `_available_`, unless the user specifies a direction
-   (e.g. "dark", "minimal", "warm"). **Avoid row 0 (Classic Light)** — it's
-   the legacy default already used by 9 sites; only fall back to it if every
-   other row is claimed. Rows marked "dark — higher effort" (3 and 6) touch
-   text/border contrast on every page, not just a handful of classes — flag
-   this to the user before picking one so they know it's a bigger diff than
-   the light rows.
+   **Read `~/github/r2d2/THEME_REGISTRY.md` before choosing**, then:
+
+   a. Roll Major Option 1 (Light Classic), 2 (Light + Bold Hero), or 3
+      (Full Dark) with equal probability — unless the user specifies a
+      direction (e.g. "dark", "minimal", "warm"), in which case honor that
+      instead of rolling.
+   b. If Option 2 or 3, roll randomly among that option's rows marked
+      `_available_` in the registry's row table. Option 1 has only row 0.
+   c. **Flag Option 3 (dark) to the user before building** — it's a
+      whole-site pass touching every page's colors, not a handful of
+      classes, per the registry's "Dark mode implementation notes." Still
+      apply it the same session if approved; it's mechanical (follow the
+      notes), not a fresh design exploration — just larger in scope than
+      Options 1/2.
 
    State the chosen theme in your Phase 1 summary:
-   > "Visual theme: **[Name]** (row [#])."
+   > "Visual theme: **[Name]** (row [#], Option [1/2/3])."
 
 **Auto-derive (confirm in summary):**
 - Site name → "Best [Niche] Companies"
@@ -400,20 +402,25 @@ brand: {
 
 ### 4c-2. Apply the visual theme preset
 
-Apply the row picked in Phase 1 Step 7. Follow the "How to apply a row"
-section in `~/github/r2d2/THEME_REGISTRY.md` exactly — it's a mechanical
-find/replace pass (neutral scale rename, radius permutation, `font-display`
-on `<h1>`s and the header logo only, shadow swap), not a fresh design pass.
+Apply the row picked in Phase 1 Step 7. Follow "How to apply a row" in
+`~/github/r2d2/THEME_REGISTRY.md` exactly — it's a mechanical find/replace
+pass, not a fresh design pass. What that means depends on the Major Option:
+
+- **Option 1** (row 0): nothing to apply — this is the unmodified template look.
+- **Option 2** (rows 1/2/4/5): neutral scale rename, radius permutation,
+  `font-display` on `<h1>`s and the header logo only, plus the mandatory
+  "Hero band treatment" — do not skip the hero step, a token-only pass was
+  judged too subtle when compared side-by-side against a sibling
+  (confirmed 2026-07-12).
+- **Option 3** (rows 3/6/7, dark): follow "Dark mode implementation notes"
+  in full — this is a whole-site pass (every `.astro` file, not just the
+  homepage): inverted neutral-scale substitution, brand-color rebalancing
+  for dark-background contrast, hardcoded hex colors (e.g. `StarRating`),
+  Tailwind Typography `prose-invert`, and status colors. Grep for the
+  opacity-collision bug the notes describe before committing.
+
 Do this across every `.astro` file under `src/`, then `npm run build` to
 confirm it's clean before moving on.
-
-**Also apply the "Hero band treatment" section of `THEME_REGISTRY.md` to
-the homepage hero `<section>` — this is required for every row, not
-optional.** Confirmed 2026-07-12: a first pilot that only changed neutral
-scale/font/radius/shadow was judged too subtle when compared side-by-side
-against an unmodified sibling site. The dark-gradient hero band (contained
-to just that one section, using the site's own `brand-900`) is what
-actually reads as different at a glance — do not skip it to save time.
 
 **Update `~/github/r2d2/THEME_REGISTRY.md` now**, in the same session: mark
 the chosen row's "Used by" cell with this site's domain. Do this before
