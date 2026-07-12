@@ -748,6 +748,36 @@ is missing from the "Companies" dropdown — check `navCompanies` in
 the top (not just the first one found) and must not filter any of them out
 of the remaining list.
 
+**Page `<title>` length check — REQUIRED before pushing:**
+
+Every page's `<title>` must be strictly under 70 characters (SEO — longer
+titles get truncated with "..." in Google search results). This is enforced
+architecturally in `Base.astro`: it computes `title | SITE.name` and drops
+the ` | SITE.name` suffix instead if that would push the total to 70+
+characters (`titleWithSite.length >= 70 ? title : titleWithSite`) — so a
+long company name or long `SITE.name` never overflows, it just loses the
+branding suffix on that one page. The company profile title itself
+(`src/pages/companies/[slug].astro`) is `${company.name} review ${year}` —
+do not add a niche-label clause like `: ${NICHE.label}` to it; that alone
+pushed real titles (e.g. "Accenture review 2026: Machine Learning
+Development | Best Machine Learning Development Services Companies") well
+past 100 characters before this was fixed (2026-07-12).
+
+```bash
+# Any built page with a <title> of 70+ characters is a bug
+grep -roE "<title>.{70,}</title>" dist/ | head -10
+```
+This must return **zero** results. If it doesn't, the offending page's title
+template is too verbose on its own — comparison pages
+(`src/pages/comparisons/[slug].astro`) are the most likely culprit, since
+`${c1.name} vs ${c2.name} (${year}): ${NICHE.label} comparison` can exceed
+70 characters by itself with two long company names, even before the
+`Base.astro` safety net has a chance to drop anything (there's nothing left
+to drop — the raw title is already over budget). That's a known, currently
+unresolved gap in this template: flag it to the user rather than silently
+rewording their comparison title format, since shortening it is a content
+decision, not a mechanical fix.
+
 **Matrix table all-dash check — REQUIRED before pushing:**
 
 After the build, open `dist/index.html` and search for tables with only "–" cells.
@@ -951,6 +981,8 @@ Recommended next steps:
       catches the "featured company drops siblings 2-4" nav bug
 - [ ] `src/pages/contact.astro` exists with the Web3Forms access key and a "Contact" link
       appears in the desktop nav, mobile nav, and footer Resources list
+- [ ] `grep -roE "<title>.{70,}</title>" dist/` returns zero results — every page's `<title>`
+      is strictly under 70 characters
 
 **Visual identity**
 - [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
