@@ -440,6 +440,28 @@ Run this scan after editing to verify no TODOs remain:
 grep -n "TODO" src/pages/index.astro | head -30
 ```
 
+**Homepage `<title>`/`<h1>` casing — the template already handles this, do
+not break it.** The homepage `<title>` and `<h1>` are
+`` `Best ${NICHE.label} ${providersLabelTC} in ${year}` ``, where
+`providersLabelTC` is a `titleCase()`-transformed version of
+`NICHE.providersLabel` computed in the frontmatter. `NICHE.providersLabel`
+itself stays lowercase (e.g. `'agencies'`, `'companies'`) because it also
+reads correctly mid-sentence elsewhere on the same page (e.g. "36 agencies
+reviewed", "Compare all agencies") — do not capitalize the config value
+itself, only the title/H1 call sites use the title-cased copy. If you
+customize the homepage headline with hardcoded text instead of
+`{NICHE.providersLabel}` (as `best-ml-development-companies-europe` and
+`top-ml-development-services-europe` do, e.g. "Best Machine Learning
+Development Companies in Europe"), just write it correctly capitalized by
+hand — there's no lowercase-word bug to introduce in that path.
+
+Verify before committing:
+```bash
+# Confirm the built homepage <title> has no lowercase word after "Best "
+# that should be capitalized (spot-check by eye — this greps the raw string)
+grep -o "<title>[^<]*</title>" dist/index.html
+```
+
 ### 4g. `src/pages/comparisons/[slug].astro`
 
 Two sections require niche-specific updates:
@@ -983,6 +1005,9 @@ Recommended next steps:
       appears in the desktop nav, mobile nav, and footer Resources list
 - [ ] `grep -roE "<title>.{70,}</title>" dist/` returns zero results — every page's `<title>`
       is strictly under 70 characters
+- [ ] Homepage `<title>` and `<h1>` have every word capitalized except articles/prepositions
+      (e.g. "Best Machine Learning Agencies in 2026", not "...agencies in 2026") —
+      `grep -o "<title>[^<]*</title>" dist/index.html` and eyeball it
 
 **Visual identity**
 - [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
