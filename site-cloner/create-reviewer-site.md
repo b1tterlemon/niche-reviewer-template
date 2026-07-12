@@ -570,7 +570,112 @@ Verify before committing:
 head -2 public/favicon.svg   # must start with <svg
 ```
 
-### 4j. `CLAUDE.md`
+### 4j. `src/pages/contact.astro`
+
+Create a contact page for link placement / advertising inquiries using Web3Forms.
+The Web3Forms access key is reusable across all sites — use `032a901f-d3c0-46a4-afd4-907be497ee1e`.
+The domain field on web3forms.com is a label only; it is not validated or enforced.
+
+```astro
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../config';
+---
+
+<Base
+  title="Contact"
+  description={`Get in touch with ${SITE.name} — advertising, link placements, corrections, or general inquiries.`}
+  canonical={`${SITE.url}/contact/`}
+>
+  <section class="py-16 sm:py-24">
+    <div class="mx-auto max-w-xl px-4 sm:px-6">
+
+      <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">Contact us</h1>
+      <p class="text-slate-600 mb-10">
+        Interested in a sponsored listing or link placement on {SITE.name}?
+        Fill out the form and we'll get back to you within 1–2 business days.
+      </p>
+
+      <div id="success" class="hidden bg-green-50 border border-green-200 text-green-800 rounded-lg px-5 py-4 mb-6 text-sm">
+        Thanks! Your message has been sent. We'll reply within 1–2 business days.
+      </div>
+      <div id="error" class="hidden bg-red-50 border border-red-200 text-red-800 rounded-lg px-5 py-4 mb-6 text-sm">
+        Something went wrong. Please try again or email us directly.
+      </div>
+
+      <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="space-y-5">
+        <input type="hidden" name="access_key" value="032a901f-d3c0-46a4-afd4-907be497ee1e" />
+        <input type="hidden" name="subject" value={`Link placement inquiry — ${SITE.domain}`} />
+        <input type="hidden" name="from_name" value={SITE.name} />
+        <input type="checkbox" name="botcheck" class="hidden" />
+
+        <div>
+          <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Your name</label>
+          <input id="name" type="text" name="name" required autocomplete="name" placeholder="Jane Smith"
+            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600" />
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+          <input id="email" type="email" name="email" required autocomplete="email" placeholder="jane@company.com"
+            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600" />
+        </div>
+
+        <div>
+          <label for="message" class="block text-sm font-medium text-slate-700 mb-1">Message</label>
+          <textarea id="message" name="message" required rows="5"
+            placeholder="Tell us about the placement you're looking for, your target URL, and any budget or timeline details."
+            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 resize-y"></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn"
+          class="w-full bg-brand-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Send message
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById('contact-form') as HTMLFormElement;
+    const btn  = document.getElementById('submit-btn') as HTMLButtonElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form),
+        });
+        const data = await res.json();
+        if (data.success) {
+          form.classList.add('hidden');
+          document.getElementById('success')!.classList.remove('hidden');
+        } else {
+          throw new Error(data.message);
+        }
+      } catch {
+        document.getElementById('error')!.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Send message';
+      }
+    });
+  </script>
+</Base>
+```
+
+Then add "Contact" to the nav and footer in `src/layouts/Base.astro`:
+- Desktop nav: add `<a href="/contact/" class="px-3 py-2 rounded hover:text-brand-600 transition-colors">Contact</a>` right after the Disclosure link, before `</nav>`
+- Mobile nav: add `<a href="/contact/" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600">Contact</a>` right after the Disclosure link, inside the same `<div class="border-t ...">` block
+- Footer Resources `<ul>`: add `<li><a href="/contact/" class="text-xs text-slate-600 hover:text-brand-600">Contact</a></li>` right after the Affiliate disclosure `<li>`
+
+Verify before committing:
+```bash
+grep -c "contact" src/layouts/Base.astro   # expect 3 (desktop nav, mobile nav, footer)
+```
+
+### 4k. `CLAUDE.md`
 
 Update the three niche-specific sections:
 1. **Rating logic** dimension winner bullets — name your niche's actual companies
@@ -752,6 +857,7 @@ After deployment completes, verify using the `.pages.dev` URL:
 - [ ] At least 1 comparison page loads
 - [ ] Alternatives page for one company loads
 - [ ] Affiliate disclosure page loads
+- [ ] Contact page loads and form fields render
 - [ ] 404 page loads and description references new niche
 
 ### Technical checks
@@ -843,6 +949,8 @@ Recommended next steps:
 - [ ] Companies dropdown link count (isolated between the `<!-- Companies dropdown -->` /
       `<!-- Comparisons dropdown -->` comments in `dist/index.html`) equals total company count —
       catches the "featured company drops siblings 2-4" nav bug
+- [ ] `src/pages/contact.astro` exists with the Web3Forms access key and a "Contact" link
+      appears in the desktop nav, mobile nav, and footer Resources list
 
 **Visual identity**
 - [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
