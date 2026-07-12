@@ -295,12 +295,28 @@ export const SITE = {
   domain:        '[target-domain]',
   url:           'https://[target-domain]',
   tagline:       'Independent reviews of [niche] companies',
-  description:   'Find and compare the best [niche] companies. Independent reviews, pricing data, and side-by-side comparisons. Updated [Month Year].',
+  description:   'Find and compare the best [niche] companies. Independent reviews, pricing data, and side-by-side comparisons.',
   locale:        'en_US',
   twitterHandle: '',
   lastReviewed:  '[Month Year]',
 };
+```
 
+**Never put `${SITE.lastReviewed}` (or any month/year) inside a `description`
+prop.** `SITE.lastReviewed` exists only for visible on-page trust signals —
+"Last reviewed: [Month Year]" footers/badges on company, comparison, and
+alternatives pages, and the "Updated [Month Year]" hero badge on the
+homepage. It must never appear inside text that becomes a
+`<meta name="description">`. Confirmed 2026-07-12: a meta description reading
+"Updated July 2026" was live on all 10 r2d2 sites and looks stale in every
+month that isn't the one baked in — the user does not update these sites
+monthly, so a static date in a search-result snippet actively undersells
+freshness rather than signaling it. `SITE.description` (used as the default
+`description` fallback in `Base.astro`, and echoed verbatim in
+`llms.txt.ts`'s blockquote) is included in this rule — do not append "Updated
+[Month Year]" to it either.
+
+```typescript
 export const NICHE = {
   label:          '[Niche Label]',       // e.g. 'Cloud Migration'
   providerLabel:  'company',
@@ -770,6 +786,22 @@ is missing from the "Companies" dropdown — check `navCompanies` in
 the top (not just the first one found) and must not filter any of them out
 of the remaining list.
 
+**Stale date in meta description check — REQUIRED before pushing:**
+
+`<meta name="description">` must never contain `${SITE.lastReviewed}` or any
+other baked-in month/year — it reads as stale the moment the calendar turns
+over, and this template's sites are not on a monthly update cadence. The
+on-page "Last reviewed: [Month Year]" text is fine and untouched by this
+check; this only targets the `<meta name="description">` tag itself.
+
+```bash
+# Any built page with a month name in its meta description is a bug
+grep -rlE '<meta name="description" content="[^"]*(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{4}' dist/
+```
+This must return **zero** file paths. If it doesn't, trace the offending
+page's `description`/`pageDesc` string back to `${SITE.lastReviewed}` and
+remove that clause — do not touch the separate on-page "Last reviewed" text.
+
 **Page `<title>` length check — REQUIRED before pushing:**
 
 Every page's `<title>` must be strictly under 70 characters (SEO — longer
@@ -1008,6 +1040,8 @@ Recommended next steps:
 - [ ] Homepage `<title>` and `<h1>` have every word capitalized except articles/prepositions
       (e.g. "Best Machine Learning Agencies in 2026", not "...agencies in 2026") —
       `grep -o "<title>[^<]*</title>" dist/index.html` and eyeball it
+- [ ] `grep -rlE '<meta name="description" content="[^"]*(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{4}' dist/`
+      returns zero file paths — no meta description contains a baked-in month/year
 
 **Visual identity**
 - [ ] `~/github/r2d2/PALETTE_REGISTRY.md` was read before picking the brand color, and updated
