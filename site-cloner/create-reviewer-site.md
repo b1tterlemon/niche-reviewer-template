@@ -407,6 +407,14 @@ on `<h1>`s and the header logo only, shadow swap), not a fresh design pass.
 Do this across every `.astro` file under `src/`, then `npm run build` to
 confirm it's clean before moving on.
 
+**Also apply the "Hero band treatment" section of `THEME_REGISTRY.md` to
+the homepage hero `<section>` — this is required for every row, not
+optional.** Confirmed 2026-07-12: a first pilot that only changed neutral
+scale/font/radius/shadow was judged too subtle when compared side-by-side
+against an unmodified sibling site. The dark-gradient hero band (contained
+to just that one section, using the site's own `brand-900`) is what
+actually reads as different at a glance — do not skip it to save time.
+
 **Update `~/github/r2d2/THEME_REGISTRY.md` now**, in the same session: mark
 the chosen row's "Used by" cell with this site's domain. Do this before
 moving to 4d — same reasoning as the palette registry update above.
